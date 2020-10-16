@@ -27,8 +27,9 @@ class ContextHelper implements ProtectedContextAwareInterface
             return [];
         }
 
-        $uriSegments = $this->getUriSegments($requestUriPath);
-        $dimensionValues = $this->getDimensionValuesForUriSegments($uriSegments);
+        $hosts = [$requestUriPath->getHost()];
+        $uriSegments = $this->getUriSegments($requestUriPath->getPath());
+        $dimensionValues = $this->getDimensionValuesForUriSegmentsOrHost($uriSegments,$hosts);
         if (empty($dimensionValues)) {
             $dimensionValues = $this->getDefaultDimensionValues();
         }
@@ -46,9 +47,10 @@ class ContextHelper implements ProtectedContextAwareInterface
 
     /**
      * @param array $uriSegments
+     * @param array $hosts
      * @return array
      */
-    protected function getDimensionValuesForUriSegments($uriSegments)
+    protected function getDimensionValuesForUriSegmentsOrHost($uriSegments,$hosts)
     {
         if (count($uriSegments) !== count($this->contentDimensionsConfiguration)) {
             return [];
@@ -57,9 +59,14 @@ class ContextHelper implements ProtectedContextAwareInterface
         $index = 0;
         $dimensionValues = [];
         foreach ($this->contentDimensionsConfiguration as $dimensionName => $dimensionConfiguration) {
-            $uriSegment = $uriSegments[$index++];
+            $index = $index++;
+            $uriSegment = $uriSegments[$index];
+            $host = $hosts[$index];
             foreach ($dimensionConfiguration['presets'] as $preset) {
-                if ($uriSegment === $preset['uriSegment']) {
+                if (
+                    (!empty($preset['uriSegment']) && $uriSegment === $preset['uriSegment']) ||
+                    (!empty($preset['resolutionHost']) && $host === $preset['resolutionHost'])
+                ) {
                     $dimensionValues[$dimensionName] = $preset['values'];
                     continue 2;
                 }

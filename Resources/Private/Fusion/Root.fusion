@@ -1,13 +1,13 @@
 prototype(MOC.NotFound:NotFoundDocument) < prototype(Neos.Fusion:Value) {
     uriPathSegment =  ${Configuration.setting('MOC.NotFound.uriPathSegment')}
     context = ${NotFound.Context.ofRequestUriPath(this.requestUriPath)}
-
+    #requestUriPath.@process.debug = Neos.Fusion:Debug
     value = ${q(site).context(this.context).children('[instanceof Neos.Neos:Document]').filter('[uriPathSegment="' + this.uriPathSegment + '"]').get(0)}
 }
 
 error {
     @context.notfoundDocument = MOC.NotFound:NotFoundDocument {
-        requestUriPath = ${request.httpRequest.uri.path}
+        requestUriPath = ${request.httpRequest.uri}
     }
 
     4xx {
